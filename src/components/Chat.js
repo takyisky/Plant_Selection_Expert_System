@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FaPaperPlane, FaRedo } from "react-icons/fa";
+import { FaPaperPlane, FaRedo, FaArrowDown } from "react-icons/fa";
+import { GrStatusGood } from "react-icons/gr";
 
 // Define 21 questions with their corresponding parameter keys
 const questions = [
@@ -96,6 +97,10 @@ function Chat() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   // Ref to ensure the greeting is only sent once
   const didMount = useRef(false);
+  // Ref for the chat container (used for manual scroll, if needed)
+  const chatContainerRef = useRef(null);
+  // Ref for the last bot message
+  const lastBotMessageRef = useRef(null);
 
   // On mount, show the greeting only once
   useEffect(() => {
@@ -107,6 +112,15 @@ function Chat() {
       didMount.current = true;
     }
   }, []);
+
+  // Automatically scroll to the last bot message when a new bot response is added
+  useEffect(() => {
+    if (chatLog.length > 0 && chatLog[chatLog.length - 1].sender === "bot") {
+      if (lastBotMessageRef.current) {
+        lastBotMessageRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [chatLog]);
 
   const addBotMessage = (msg) => {
     setChatLog((prev) => [...prev, { sender: "bot", message: msg }]);
@@ -121,14 +135,19 @@ function Chat() {
     setConditions({});
     setCurrentQuestionIndex(0);
     setChatLog([]);
-    // When restarting, also send the greeting once
     addBotMessage(
       "Hi, I am the Plant Selection AI. I will ask you 21 questions to help determine the best plants for you. " +
         "Type 'yes' when you're ready to proceed, 'stop' to end, or 'restart' to start over."
     );
   };
 
-  // Fetch recommendations from the backend using collected conditions
+  // Manual scroll to last bot message
+  const scrollToLastBotMessage = () => {
+    if (lastBotMessageRef.current) {
+      lastBotMessageRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   const fetchRecommendations = async (conds) => {
     const params = new URLSearchParams();
     Object.entries(conds).forEach(([key, value]) => {
@@ -148,7 +167,7 @@ function Chat() {
       ) {
         addBotMessage(
           "According to our current knowledge base, we couldn't find any suitable plants. " +
-            "You can type 'restart' to provide different parameters."
+            "You can type 'restart' or use 'red' button to provide different parameters."
         );
       } else {
         addBotMessage(
@@ -162,7 +181,6 @@ function Chat() {
     }
   };
 
-  // Handle user input for conversation
   const handleUserInput = async () => {
     const trimmedInput = input.trim();
     if (!trimmedInput) return;
@@ -172,7 +190,6 @@ function Chat() {
 
     const lowerInput = trimmedInput.toLowerCase();
 
-    // Global commands
     if (lowerInput === "stop") {
       addBotMessage("Bot stopped. Thank you for using Plant Selection AI.");
       setConversationState("stopped");
@@ -182,7 +199,6 @@ function Chat() {
       resetConversation();
       return;
     }
-
     if (conversationState === "init") {
       if (lowerInput === "yes") {
         setConversationState("inConversation");
@@ -195,9 +211,7 @@ function Chat() {
       }
       return;
     }
-
     if (conversationState === "inConversation") {
-      // Save answer for the current question
       const currentQuestion = questions[currentQuestionIndex];
       setConditions((prev) => ({
         ...prev,
@@ -209,7 +223,6 @@ function Chat() {
         setCurrentQuestionIndex(nextIndex);
         addBotMessage(questions[nextIndex].text);
       } else {
-        // All questions answered; fetch recommendations automatically
         await fetchRecommendations({
           ...conditions,
           [currentQuestion.key]: trimmedInput,
@@ -217,14 +230,12 @@ function Chat() {
       }
       return;
     }
-
     if (conversationState === "done") {
       addBotMessage(
         "If you'd like to start over, type 'restart'. To end, type 'stop'."
       );
       return;
     }
-
     if (conversationState === "stopped") {
       addBotMessage("Bot is stopped. Type 'restart' to start again.");
       return;
@@ -233,8 +244,10 @@ function Chat() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto flex flex-col min-h-screen">
-      {/* Chat log container */}
-      <div className="flex-grow mb-6 p-6 bg-green-50 rounded-2xl shadow overflow-y-auto space-y-5">
+      <div
+        ref={chatContainerRef}
+        className="flex-grow mb-6 p-6 bg-gray-800 bg-opacity-90 rounded-2xl shadow overflow-y-auto space-y-5"
+      >
         {chatLog.map((entry, index) => (
           <div
             key={index}
@@ -243,24 +256,22 @@ function Chat() {
             }`}
           >
             <div
+              ref={entry.sender === "bot" ? lastBotMessageRef : null}
               className={`p-4 rounded-xl max-w-2/3 ${
                 entry.sender === "bot"
-                  ? "bg-green-400 text-green-900"
-                  : "bg-green-200 text-green-800"
+                  ? "bg-green-400 bg-opacity-55 text-white"
+                  : "bg-blue-400 bg-opacity-55 text-white"
               }`}
             >
-              <strong>{entry.sender === "bot" ? "T-Expert:" : "You:"}</strong>{" "}
               {entry.message}
             </div>
           </div>
         ))}
       </div>
-
-      {/* Sticky Input area fixed at the bottom */}
-      <div className="sticky bottom-0">
+      <div className="sticky bottom-2 shadow-lg bg-gray-800 bg-opacity-90 p-2 rounded-3xl">
         <div className="relative">
           <input
-            className="border rounded-2xl p-3 pr-20 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="bg-gray-900 text-white rounded-2xl p-4 pr-20 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
             type="text"
             placeholder="Type your message here..."
             value={input}
@@ -271,7 +282,7 @@ function Chat() {
               }
             }}
           />
-          <div className="absolute inset-y-0 right-0 flex items-center pr-5 space-x-4">
+          <div className="absolute inset-y-0 right-0 flex items-center pr-5 space-x-3">
             <button
               className="text-green-600 hover:text-green-800"
               onClick={handleUserInput}
@@ -281,10 +292,10 @@ function Chat() {
             {conversationState === "inConversation" &&
               currentQuestionIndex >= 5 && (
                 <button
-                  className="text-blue-600 hover:text-blue-800"
+                  className="text-blue-400 hover:text-blue-800"
                   onClick={() => fetchRecommendations(conditions)}
                 >
-                  Recommend
+                  <GrStatusGood size={22} />
                 </button>
               )}
             <button
@@ -292,6 +303,12 @@ function Chat() {
               onClick={resetConversation}
             >
               <FaRedo size={20} />
+            </button>
+            <button
+              className="text-yellow-600 hover:text-yellow-800"
+              onClick={scrollToLastBotMessage}
+            >
+              <FaArrowDown size={20} />
             </button>
           </div>
         </div>
