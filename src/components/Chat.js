@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
+// Import icons used for the buttons from react-icons.
 import { FaPaperPlane, FaRedo, FaArrowDown } from "react-icons/fa";
 import { GrStatusGood } from "react-icons/gr";
 
-// Define 21 questions with their corresponding parameter keys
+// Defined an array of 21 question objects.
+// Each object has a unique key (used to store the answer) and text (the question prompt).
 const questions = [
   {
     key: "sunlight",
@@ -85,24 +87,30 @@ const questions = [
 ];
 
 function Chat() {
-  // Conversation log holds messages (bot/user)
+  // State to hold the conversation messages.
+  // Each message has a 'sender' ("bot" or "user") and the message text.
   const [chatLog, setChatLog] = useState([]);
-  // Input field value
+  // State for the current value of the input field.
   const [input, setInput] = useState("");
-  // Conversation state: "init", "inConversation", "done", "stopped"
+  // State to track the current conversation phase:
+  // "init" (waiting for the user to start), "inConversation" (questions are being asked),
+  // "done" (conversation completed), or "stopped" (conversation ended).
   const [conversationState, setConversationState] = useState("init");
-  // Collected conditions from answers
+  // Object to store the answers provided by the user.
+  // Keys correspond to question keys from the questions array.
   const [conditions, setConditions] = useState({});
-  // Track the index of the current question
+  // Index of the current question being asked.
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  // Ref to ensure the greeting is only sent once
+
+  // A ref to ensure that the greeting message is sent only once on component mount.
   const didMount = useRef(false);
-  // Ref for the chat container (used for manual scroll, if needed)
+  // Ref for the chat log container element, used to scroll the conversation.
   const chatContainerRef = useRef(null);
-  // Ref for the last bot message
+  // Ref for the last bot message element.
+  // This is used to scroll the last bot response into view.
   const lastBotMessageRef = useRef(null);
 
-  // On mount, show the greeting only once
+  // useEffect: Runs once on mount to send the initial greeting.
   useEffect(() => {
     if (!didMount.current) {
       addBotMessage(
@@ -113,7 +121,8 @@ function Chat() {
     }
   }, []);
 
-  // Automatically scroll to the last bot message when a new bot response is added
+  // useEffect: Whenever the chatLog updates and the last message is from the bot,
+  // scroll that last bot message into view with a smooth behavior.
   useEffect(() => {
     if (chatLog.length > 0 && chatLog[chatLog.length - 1].sender === "bot") {
       if (lastBotMessageRef.current) {
@@ -122,32 +131,39 @@ function Chat() {
     }
   }, [chatLog]);
 
+  // Helper function to add a message from the bot to the chat log.
   const addBotMessage = (msg) => {
     setChatLog((prev) => [...prev, { sender: "bot", message: msg }]);
   };
 
+  // Helper function to add a message from the user to the chat log.
   const addUserMessage = (msg) => {
     setChatLog((prev) => [...prev, { sender: "user", message: msg }]);
   };
 
+  // Reset the conversation by clearing all state and then sending the greeting.
   const resetConversation = () => {
     setConversationState("init");
     setConditions({});
     setCurrentQuestionIndex(0);
     setChatLog([]);
     addBotMessage(
-      "Hi, I am the Plant Selection AI. I will ask you 21 questions to help determine the best plants for you. " +
+      "Hi, I am the Plant Selection Expert System. I will ask you 21 questions to help determine the best plants for you. " +
         "Type 'yes' when you're ready to proceed, 'stop' to end, or 'restart' to start over."
     );
   };
 
-  // Manual scroll to last bot message
+  // Function to manually scroll to the last bot message.
+  // Called when the user clicks the "scroll to last bot message" button.
   const scrollToLastBotMessage = () => {
     if (lastBotMessageRef.current) {
       lastBotMessageRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
 
+  // Function to fetch plant recommendations from the backend.
+  // It builds URL parameters from the conditions (answers), fetches the response,
+  // and adds a bot message with the result.
   const fetchRecommendations = async (conds) => {
     const params = new URLSearchParams();
     Object.entries(conds).forEach(([key, value]) => {
@@ -167,7 +183,7 @@ function Chat() {
       ) {
         addBotMessage(
           "According to our current knowledge base, we couldn't find any suitable plants. " +
-            "You can type 'restart' or use 'red' button to provide different parameters."
+            "You can type 'restart' or use the red button to provide different parameters."
         );
       } else {
         addBotMessage(
@@ -181,15 +197,21 @@ function Chat() {
     }
   };
 
+  // Function to handle the user's input.
+  // It processes commands ("stop", "restart"), updates conversation state,
+  // saves answers, and triggers fetching recommendations when needed.
   const handleUserInput = async () => {
     const trimmedInput = input.trim();
     if (!trimmedInput) return;
 
+    // Add the user message to the chat log.
     addUserMessage(trimmedInput);
+    // Clear the input field.
     setInput("");
 
     const lowerInput = trimmedInput.toLowerCase();
 
+    // Handle global commands:
     if (lowerInput === "stop") {
       addBotMessage("Bot stopped. Thank you for using Plant Selection AI.");
       setConversationState("stopped");
@@ -199,6 +221,8 @@ function Chat() {
       resetConversation();
       return;
     }
+
+    // If the conversation is in the initial state, start the conversation.
     if (conversationState === "init") {
       if (lowerInput === "yes") {
         setConversationState("inConversation");
@@ -211,8 +235,11 @@ function Chat() {
       }
       return;
     }
+
+    // If the conversation is in progress:
     if (conversationState === "inConversation") {
       const currentQuestion = questions[currentQuestionIndex];
+      // Save the answer for the current question.
       setConditions((prev) => ({
         ...prev,
         [currentQuestion.key]: trimmedInput,
@@ -220,9 +247,11 @@ function Chat() {
 
       const nextIndex = currentQuestionIndex + 1;
       if (nextIndex < questions.length) {
+        // If there are more questions, update the question index and prompt the next question.
         setCurrentQuestionIndex(nextIndex);
         addBotMessage(questions[nextIndex].text);
       } else {
+        // If all questions have been answered, fetch recommendations.
         await fetchRecommendations({
           ...conditions,
           [currentQuestion.key]: trimmedInput,
@@ -230,12 +259,16 @@ function Chat() {
       }
       return;
     }
+
+    // If the conversation is already completed, prompt the user for next actions.
     if (conversationState === "done") {
       addBotMessage(
         "If you'd like to start over, type 'restart'. To end, type 'stop'."
       );
       return;
     }
+
+    // If the conversation is stopped, instruct the user how to restart.
     if (conversationState === "stopped") {
       addBotMessage("Bot is stopped. Type 'restart' to start again.");
       return;
@@ -244,6 +277,7 @@ function Chat() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto flex flex-col min-h-screen">
+      {/* Chat log container: displays the conversation messages. */}
       <div
         ref={chatContainerRef}
         className="flex-grow mb-6 p-6 bg-gray-800 bg-opacity-90 rounded-2xl shadow overflow-y-auto space-y-5"
@@ -256,6 +290,7 @@ function Chat() {
             }`}
           >
             <div
+              // If the message is from the bot, assign the ref so that it tracks the last bot message.
               ref={entry.sender === "bot" ? lastBotMessageRef : null}
               className={`p-4 rounded-xl max-w-2/3 ${
                 entry.sender === "bot"
@@ -268,8 +303,11 @@ function Chat() {
           </div>
         ))}
       </div>
+
+      {/* Sticky input area fixed at the bottom of the screen. */}
       <div className="sticky bottom-2 shadow-lg bg-gray-800 bg-opacity-90 p-2 rounded-3xl">
         <div className="relative">
+          {/* Input field for typing messages. */}
           <input
             className="bg-gray-900 text-white rounded-2xl p-4 pr-20 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
             type="text"
@@ -282,13 +320,16 @@ function Chat() {
               }
             }}
           />
+          {/* Buttons container, positioned absolutely inside the input area */}
           <div className="absolute inset-y-0 right-0 flex items-center pr-5 space-x-3">
+            {/* Send button */}
             <button
               className="text-green-600 hover:text-green-800"
               onClick={handleUserInput}
             >
               <FaPaperPlane size={20} />
             </button>
+            {/* Recommend button, conditionally shown after question 5 */}
             {conversationState === "inConversation" &&
               currentQuestionIndex >= 5 && (
                 <button
@@ -298,12 +339,14 @@ function Chat() {
                   <GrStatusGood size={22} />
                 </button>
               )}
+            {/* Restart button */}
             <button
               className="text-red-600 hover:text-red-800"
               onClick={resetConversation}
             >
               <FaRedo size={20} />
             </button>
+            {/* Scroll to last bot message button */}
             <button
               className="text-yellow-600 hover:text-yellow-800"
               onClick={scrollToLastBotMessage}
