@@ -11,7 +11,7 @@ function Home() {
           style={{ backgroundImage: `url('/plants-img1.jpg')` }}
         >
           <p className="bg-black bg-opacity-45 text-white text-lg font-bold p-5 rounded-xl border-2 border-white">
-            Plant Selection Expert System
+            Plant Recommendation Expert System
           </p>
         </div>
       </div>

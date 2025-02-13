@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { FaPaperPlane, FaRedo, FaArrowDown, FaPlus } from "react-icons/fa";
 import { GrStatusGood } from "react-icons/gr";
 
+
 // Array of question objects.
 const questions = [
   {
@@ -18,7 +19,7 @@ const questions = [
   },
   {
     key: "hardiness_zone",
-    text: "What is your hardiness zone? (e.g., zone5, zone7). Type 'avaliable' to see all options.",
+    text: "What is your hardiness zone? (e.g., zone5, zone3to7). Type 'avaliable' to see all options.",
   },
   {
     key: "soil_ph",
@@ -62,7 +63,7 @@ const questions = [
   },
   {
     key: "bloom_time",
-    text: "What is the bloom time? (e.g., spring, summer, fall).",
+    text: "What is the bloom time? (e.g., spring, summer, fall). Type 'avaliable' to see all options.",
   },
   {
     key: "native",
@@ -390,3 +391,5 @@ function Chat() {
 }
 
 export default Chat;
+
+// commit Save 1
