@@ -1,7 +1,8 @@
+// User Friendly React Interface
+
 import React, { useState, useEffect, useRef } from "react";
 import { FaPaperPlane, FaRedo, FaArrowDown, FaPlus } from "react-icons/fa";
 import { GrStatusGood } from "react-icons/gr";
-
 
 // Array of question objects.
 const questions = [
