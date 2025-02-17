@@ -1,3 +1,5 @@
+%% Inference Engine (This Processes Knowledge and Makes Decisions)
+
 :- use_module(library(http/http_cors)).
 :- set_setting(http:cors, ['*']).
 :- use_module(library(http/thread_httpd)).
@@ -8,6 +10,15 @@
 :- ensure_loaded('plants.pl'). % Load the plant knowledge base.
 
 %% ------------------------------
+%% 1.The query-matching mechanism (matches_conditions/2) that checks user-provided
+%% conditions against the knowledge base.
+
+%% 2. It follows a rule-based reasoning approach to find suitable plants.
+
+%% 3. The inference engine filters through all available rules (facts) 
+%% and returns only those that match the user's query.
+%% ------------------------------
+
 %% Helper Predicate: matches_conditions/2
 %%
 %% Succeeds if all key-value pairs in Query are present and equal in Conditions.
@@ -120,14 +131,14 @@ parameters_handler(Request) :-
     reply_json_dict(_{parameters: Options}).
 
 %% ------------------------------
-%% The available options for specific parameters. 
+%% The available options for specific parameters.
 %% Also helps when giving data to the plant knowlege base.
 %% ------------------------------
 
 available_options("sunlight", ["full", "partial", "shade"]).
 available_options("soil", ["sandy", "clay", "loamy", "acidic", "bark", "peaty", "silty", "rocky", "chalky", "sandy loam"]).
 available_options("maintenance", ["low", "medium", "high"]).
-available_options("hardiness_zone", ["zone 2 to 11", "zone 3 to 9", "zone 3" "zone 3 to 10", "zone 5 to 9", "zone 5 to 10", "zone 6", "zone 7", "zone 8"]).
+available_options("hardiness_zone", ["zone 2 to 11", "zone 3 to 9", "zone 3", "zone 3 to 10", "zone 5 to 9", "zone 5 to 10", "zone 6", "zone 7", "zone 8"]).
 available_options("soil_ph", ["slightly acidic", "neutral", "acidic", "alkaline"]).
 available_options("drainage", ["good", "moderate", "excellent", "poor"]).
 available_options("irrigation_needs", ["low", "moderate", "high", "regular"]).

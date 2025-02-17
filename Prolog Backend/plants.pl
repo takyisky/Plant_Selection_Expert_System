@@ -792,32 +792,6 @@ plant(
   ["Lavender"]
 ).
 
-plant(
-  conditions{
-    sunlight: full,
-    soil: sandyloam,
-    maintenance: low,
-    hardiness_zone: zone5to9,
-    soil_ph: neutral,
-    drainage: good,
-    irrigation_needs: low,
-    drought_tolerance: high,
-    light_availability: full,
-    plant_light_needs: full,
-    size_at_maturity: small,
-    growth_rate: slow,
-    pruning: low,
-    pest_resistance: high,
-    bloom_time: summer,
-    native: no,
-    biodiversity: low,
-    wind_exposure: medium,
-    slope_elevation: low,
-    purpose: culinary,
-    wildlife_habitat: yes
-  },
-  ["Thyme"]
-).
 
 plant(
   conditions{

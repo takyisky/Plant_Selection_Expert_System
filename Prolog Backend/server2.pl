@@ -12,10 +12,10 @@
 %% ------------------------------
 %% 1.The query-matching mechanism (matches_conditions/2) that checks user-provided
 %% conditions against the knowledge base.
-
+%
 %% 2. It follows a rule-based reasoning approach to find suitable plants.
-
-%% 3. The inference engine filters through all available rules (facts) 
+%
+%% 3. The inference engine filters through all available rules (facts)
 %% and returns only those that match the user's query.
 %% ------------------------------
 
